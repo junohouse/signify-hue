@@ -4,6 +4,10 @@ name = "Philips Hue Bridge"
 manufacturer = "Signify"
 version = "1.4.0"
 runtime = "wasm"
+# What this driver is worth hearing when nothing is wrong. Declaring it is also what lets an
+# installer change it from the Logs page; a driver that declares nothing sits at `info` with
+# no control. Everything it prints rather than logs is taken as `debug` and held to this too.
+log_level = "info"
 # Core may ask the bridge to replace per-bulb fan-out with one Hue grouped_light request.
 group_control = true
 scene_control = true
