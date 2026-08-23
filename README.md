@@ -18,59 +18,8 @@ version skew between a bridge and its children is invisible until something stop
 | `signify.hue.wall_switch` | `button` ×2 | The module behind an existing rocker. |
 | `signify.hue.smart_button` | `button` | One button. |
 
-### One light driver, not five
-
-There were five: `bulb`, `bulb.color`, `bulb.dimmable`, `bulb.tunable`, `bulb.on_off`. They
-shared every line of code and differed in one capability line each, because the resolved proxy
-contract is what core validates commands against — so a white fitting on the same manifest as a
-color one can be sent `set_color` by a rule no matter what any screen chooses to draw.
-
-They are one now, and the capabilities are answered per light instead, from what the bridge says
-each resource has: `Candidate::capabilities`. Same guarantee, and Philips is back to selling one
-thing called a light.
-
-A light adopted before this reclassifies itself the next time the bridge is browsed — same
-device, same bindings, so its room, rules and scenes are untouched.
-
-### Why so many bindings
-
-A multi-sensor is three bindings and a dimmer is four, rather than one device reporting several
-things, because a rule triggers on a binding and a notification name. "When the hall is dark and
-somebody moves" is two triggers on two bindings and cannot be written against one; "when the
-brighter button is held" would fire on all four buttons if they shared a binding.
-
-The same reasoning splits the actions apart — `clicked`, `held`, `repeating` and `released` are
-separate notifications rather than values of one — so a click can step a light while a hold ramps
-it.
-
-Which control-surface driver a device becomes is decided by counting its buttons and looking for
-a dial, not by matching a model number: the bridge is a Zigbee hub, and a four-button remote from
-another vendor pairs with it and reports presses exactly the same way.
-
-## Setup
-
-Discovered over mDNS (`_hue._tcp`). Pairing needs the bridge's link button pressed; the driver
-polls until it is, because the bridge refuses the request until then.
-
-Setup then reads five collections in turn and offers all of it at once:
-
-| Read | For |
-| --- | --- |
-| `/device` | What is paired, and how each thing's services group |
-| `/button` | `control_id`, so buttons are offered in the order printed on the remote |
-| `/room` | Where the bridge says everything lives |
-| `/behavior_instance` | What the bridge already has each switch driving |
-| `/light` | The bulbs, with the color and dimming detail that decides their capabilities |
-
-A bridge carrying accessories and no bulbs of its own is a real setup and is not refused.
 
 ### Taking the bridge's word for where things are
-
-The last two reads are what make adopting a whole house bearable. A Hue bridge is usually the
-only one in the building, and its bulbs are named by the app — "Hue color lamp 3", forty times
-over. Somebody already sat down and filed every one of them into a room. Without reading that
-back, adopting the bridge means doing the same work again from a list where every row looks
-identical.
 
 So each candidate carries the Hue room it is in, and core matches or creates that room at the
 moment of adoption. It is a **suggestion**, not an instruction: nothing is created behind
@@ -122,25 +71,6 @@ today's dimmer script and quietly stop working for the next one — the driver c
 `{rid, rtype}` anywhere in the structure and keeps the ones that name a room. Deliberately
 structure-blind, because the one thing every script has in common is that it refers to things by
 resource id.
-
-## State
-
-The bridge opens `/eventstream/clip/v2` once for the whole house, and core hands every frame to
-the devices behind it — each keeps the lines naming its own resource ids. At startup the bridge
-also reads `light`, `motion`, `temperature`, `light_level` and `device_power`, so a controller
-that has just come up knows where the house stands without waiting for something to change.
-
-`button` is deliberately not among them. A button resource carries its *last* event, so reading
-it at startup would report a press from whenever it happened as though it had just occurred, and
-every rule attached to that button would fire on a restart. State can be read; an event can only
-be listened for.
-
-Everything is CLIP v2, including setup. Mixing v1 and v2 is a trap: v1 numbers its lights
-`1`, `2`, `3` while v2 identifies them by UUID, so a flow that pairs with one and commands with
-the other produces device ids that 404.
-
-The bridge's certificate is self-signed — the controller identifies it by the pairing secret it
-issued, not by a public CA.
 
 ## Building
 

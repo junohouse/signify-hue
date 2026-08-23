@@ -10,33 +10,10 @@ name = "juno_driver_hue"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-# The SDK re-exports core's types, so the two are one unit: a driver built against a
-# different core than it runs on is refused by the ABI check rather than half-understood.
-# Tracks `main`. No tags while the contracts are still moving: a driver pinned to one
-# builds against a contract the controller no longer has, and certification checks it
-# against a third — which is how a capability that plainly exists reads as unknown.
-# Reproducibility comes from the checked-in Cargo.lock, which records the exact commit.
 driver-sdk = { git = "https://github.com/junohouse/driver-sdk", branch = "main" }
 
-# Working on core and this driver at once: point the SDK at a local checkout.
-#   [patch."https://github.com/junohouse/driver-sdk"]
-#   driver-sdk = { path = "../../driver-sdk" }
-
-# Its own repo, so its own workspace root. Without this, a checkout sitting inside another
-# workspace is claimed by that workspace and refuses to build.
 [workspace]
 
-# A driver is a dylib the controller loads, and it is downloaded and kept per project — so it
-# is tuned for size rather than for the last few percent of speed. A driver spends its time
-# waiting on a device, not in its own code.
-#
-# Measured on denon-avr: 667 KB -> 473 KB, and about 40% of what is left is Rust's own std,
-# statically linked into every cdylib. `strip` accounts for the last 80 KB of it and does not
-# touch the exported `juno_*` symbols, which live in the dynamic symbol table.
-#
-# `panic = "abort"` is deliberately NOT here. `export_driver!` wraps dispatch in `catch_unwind`
-# so a driver that panics reports a warning instead of taking the controller down with it.
-# Aborting would trade that for a few KB and make one bad driver everybody's outage.
 [profile.release]
 opt-level = "z"
 codegen-units = 1
