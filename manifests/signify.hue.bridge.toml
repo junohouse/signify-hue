@@ -3,6 +3,11 @@ id = "signify.hue.bridge"
 name = "Philips Hue Bridge"
 manufacturer = "Signify"
 version = "1.4.0"
+# Nobody buys a bridge. The package is Philips Hue, and what it is for is light — a bridge is
+# how the light is reached, not what is on the shelf. Without these two the catalog led with
+# `Philips Hue Bridge` under a router, filed beside Z-Wave sticks.
+product = "Philips Hue"
+kind = "light"
 runtime = "wasm"
 # What this driver is worth hearing when nothing is wrong. Declaring it is also what lets an
 # installer change it from the Logs page; a driver that declares nothing sits at `info` with
