@@ -277,14 +277,17 @@ const HUE_GROUP_LINKS: &str = "hue_group_links";
 const HUE_GROUP_PENDING: &str = "hue_group_pending";
 const HUE_GROUP_PROBLEM: &str = "hue_group_problem";
 
+/// A path, not a URL: core resolves the address, the port and the scheme from the project, and
+/// a bulb inherits all three from the bridge exactly as it inherits `Bridge address`.
+///
+/// The address is still read, but only to answer whether there is one — a request for a bridge
+/// nobody has finished setting up should not be built at all.
 fn bridge_http(inst: &Instance, method: &str, path: &str, body: Option<Value>) -> Option<HostCall> {
-    let bridge = inst.property("Bridge address").as_str()?;
-    let key = inst.property("Application key").as_str().unwrap_or("");
-    if bridge.is_empty() {
+    let key = inst.property("Application key").as_str().unwrap_or("").to_string();
+    if inst.property("Bridge address").as_str()?.is_empty() {
         return None;
     }
-    let mut request = HttpRequest::new(method, format!("https://{bridge}{path}"))
-        .header("hue-application-key", key);
+    let mut request = HttpRequest::new(method, path).header("hue-application-key", key);
     if let Some(body) = body {
         request = request.json(body.to_string());
     }
@@ -710,10 +713,7 @@ impl HueBulb {
             return None;
         }
         Some(HostCall::Http(
-            HttpRequest::new(
-                "PUT",
-                format!("https://{bridge}/clip/v2/resource/light/{id}"),
-            )
+            HttpRequest::new("PUT", format!("/clip/v2/resource/light/{id}"))
             .header("hue-application-key", key)
             .json(body.to_string()),
         ))
@@ -1342,10 +1342,7 @@ impl DriverModule for HueBulb {
             // The v1 config endpoint is the bridge's durable identity. A zone UUID plus a local
             // ownership record is not enough if somebody points this device at a replacement
             // bridge later; binding the record to `bridgeid` closes that accidental write path.
-            out.push(HostCall::Http(HttpRequest::new(
-                "GET",
-                format!("https://{bridge}/api/config"),
-            )));
+            out.push(HostCall::Http(HttpRequest::new("GET", "/api/config")));
 
             // And one read of each kind of state, so a freshly started controller knows where the
             // house stands without waiting for something to change.
@@ -1357,11 +1354,8 @@ impl DriverModule for HueBulb {
             // bridge's answer to the devices behind it, so each one still picks itself out.
             for collection in AT_START {
                 out.push(HostCall::Http(
-                    HttpRequest::new(
-                        "GET",
-                        format!("https://{bridge}/clip/v2/resource/{collection}"),
-                    )
-                    .header("hue-application-key", key),
+                    HttpRequest::new("GET", format!("/clip/v2/resource/{collection}"))
+                        .header("hue-application-key", key),
                 ));
             }
             return out;
