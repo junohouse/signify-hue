@@ -27,8 +27,10 @@ primary = true
 name = "Bridge"
 capabilities = { child_driver = "signify.hue.bulb" }
 
-[[transport]]
+[[control]]
+id = 1
 kind = "network"
+name = "Hue API"
 port = 443
 # Held open, and wrapped in TLS. The bridge presents a self-signed certificate, and it is
 # trusted on the strength of the application key it issued us rather than a public CA.
