@@ -2,6 +2,10 @@
 id = "signify.hue.dimmer"
 name = "Philips Hue Dimmer Switch"
 manufacturer = "Signify"
+# The maker's mark, linked and never copied — this package ships no Philips Hue artwork. Core
+# dereferences it once for the whole house (`GET /artwork?driver=<id>`) and every screen
+# draws the same picture: the phone, the on-screen display and the wall panel.
+icon = "https://www.philips-hue.com/etc.clientlibs/signify-brand-hue/clientlibs/clientlib-main-v2/resources/favicons/favicon_192px.png"
 version = "1.4.0"
 runtime = "wasm"
 # What this driver is worth hearing when nothing is wrong. Declaring it is also what lets an

@@ -2,6 +2,10 @@
 id = "signify.hue.bridge"
 name = "Philips Hue Bridge"
 manufacturer = "Signify"
+# The maker's mark, linked and never copied — this package ships no Philips Hue artwork. Core
+# dereferences it once for the whole house (`GET /artwork?driver=<id>`) and every screen
+# draws the same picture: the phone, the on-screen display and the wall panel.
+icon = "https://www.philips-hue.com/etc.clientlibs/signify-brand-hue/clientlibs/clientlib-main-v2/resources/favicons/favicon_192px.png"
 version = "1.4.0"
 # Nobody buys a bridge. The package is Philips Hue, and what it is for is light — a bridge is
 # how the light is reached, not what is on the shelf. Without these two the catalog led with
